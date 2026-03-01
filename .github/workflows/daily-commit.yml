@@ -2,8 +2,11 @@ name: Daily Auto Commit by 23f3000651@ds.study.iitm.ac.in
 
 on:
   schedule:
-    - cron: '30 2 * * *'  # Runs daily at 2:30 AM UTC (once per day, specific time)
-  workflow_dispatch:  # Lets you trigger manually for testing
+    - cron: '30 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write  # Ye add kar—commit/push ke liye zaroori
 
 jobs:
   update-and-commit:
@@ -12,16 +15,24 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}  # Needed to push commits
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0  # History ke liye add kar
 
       - name: Update status file by 23f3000651@ds.study.iitm.ac.in
         run: |
-          echo "Last updated: $(date -u)" > STATUS.md  # Creates/updates a file with current date
+          DATE=$(date -u +%Y-%m-%d\ %H:%M:%S\ UTC)
+          echo "# Daily Status Update" > STATUS.md
+          echo "## Last run: $DATE" >> STATUS.md
+          echo "## Email: 23f3000651@ds.study.iitm.ac.in" >> STATUS.md
 
       - name: Commit and push changes
         run: |
-          git config user.name "Daily Bot"
-          git config user.email "23f3000651@ds.study.iitm.ac.in"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"  # Official bot email use kar
           git add STATUS.md
-          git commit -m "Daily auto-update: $(date -u) by 23f3000651@ds.study.iitm.ac.in"
-          git push
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Daily auto-update: $(date -u) [skip ci]"
+            git push
+          fi
